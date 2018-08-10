@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Notes:
+#   require jq command
+
+# References:
+#   https://pypi.python.org/pypi/awsebcli
+#   awsebcli-3.10.4のソースコード
+#   http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
+#   http://docs.aws.amazon.com/cli/latest/reference/elasticbeanstalk/describe-environment-resources.html
+
+env_name=""
+region="ap-northeast-1"
+profile=""
+ext_gate_host=""
+keyfile=""
+
+# beanstalkのリソース情報からインスタンスIDを取得
+environment_resources=$(aws elasticbeanstalk describe-environment-resources --environment-name $env_name --region $region --profile $profile)
+instance_ids=($(echo $environment_resources | jq -r '.EnvironmentResources.Instances[].Id' | tr "\n" " "))
+
+# インスタンスのIPアドレスを取得
+instances=$(aws ec2 describe-instances --instance-ids ${instance_ids[@]} --region $region --profile $profile)
+ips=($(echo $instances | jq -r '.Reservations[].Instances[].PublicIpAddress' | tr "\n" " "))
+
+# どのIPに接続するか選択
+length="${#ips[@]}"
+for index in $(seq $length); do
+  echo "$index: ${ips[(($index - 1))]}"
+done
+
+idx_list=$(seq $length | tr "\n" "/" | sed -e "s/\/$//g")
+echo -n "which instance? ($idx_list) "
+read answer
+
+idx=$answer
+if [[ -z "$answer" ]]; then
+  idx="1"
+fi
+ip="${ips[(($idx - 1))]}"
+if [[ -z "$ip" ]]; then
+  echo "invalid."
+  exit 1
+fi
+echo "$idx: $ip"
+
+# 接続
+ssh -o ProxyCommand="ssh -W %h:%p $ext_gate_host" -i "$keyfile" ec2-user@$ip
