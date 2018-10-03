@@ -14,9 +14,9 @@ func main() {
   app.Version = "0.0.1"
 
   app.Action = func (context *cli.Context) error {
-    if context.Bool("env-name") {
+    if context.String("env-name") != "" {
       fmt.Println("env-name: " + context.Args().Get(0))
-    } else if context.Bool("region") {
+    } else if context.String("region") != "" {
       fmt.Println("region: " + context.Args().Get(0))
     } else {
       fmt.Println(context.Args().Get(0))
