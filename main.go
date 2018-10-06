@@ -1,3 +1,6 @@
+// https://docs.aws.amazon.com/sdk-for-go/api/service/elasticbeanstalk/
+// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/
+
 package main
 
 import (
@@ -8,7 +11,7 @@ import (
     // "github.com/aws/aws-sdk-go/aws/credentials"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-    // "github.com/aws/aws-sdk-go/service/ec2"
+    "github.com/aws/aws-sdk-go/service/ec2"
     // "github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -41,6 +44,10 @@ func main() {
       aws.NewConfig().WithRegion(region),
     )
     // fmt.Println(eb_client.DescribeEnvironments(nil))
+    ec2_client := ec2.New(
+      sess,
+      aws.NewConfig().WithRegion(region),
+    )
 
     // beanstalkのリソース情報からインスタンスIDを取得
     eb_env_params := elasticbeanstalk.DescribeEnvironmentResourcesInput{
@@ -51,13 +58,29 @@ func main() {
       panic(err)
     }
     // fmt.Println(resources.EnvironmentResources.Instances)
-    var instance_ids []string
+    var instance_ids []*string
     for _, v := range resources.EnvironmentResources.Instances {
-      instance_ids = append(instance_ids, *v.Id)
+      instance_ids = append(instance_ids, v.Id)
     }
-    fmt.Println(instance_ids)
+    // fmt.Println(instance_ids)
 
     // インスタンスのIPアドレスを取得
+    ec2_instances_params := ec2.DescribeInstancesInput{
+      InstanceIds: instance_ids,
+    }
+    instances, err := ec2_client.DescribeInstances(&ec2_instances_params)
+    if err != nil {
+      panic(err)
+    }
+    var instance_ips []*string
+    for _, v1 := range instances.Reservations {
+      for _, v2 := range v1.Instances {
+        // fmt.Println(*v2.PublicIpAddress)
+        instance_ips = append(instance_ips, v2.PublicIpAddress)
+      }
+    }
+    fmt.Println(instance_ips)
+
     // どのIPに接続するか選択
     // 接続
 
