@@ -13,12 +13,6 @@ import (
 )
 
 func main() {
-  // var env_name string
-  // var region string
-  // var profile string
-  // var keyfile string
-  // var proxy_host string
-
   os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 
   app := cli.NewApp()
@@ -41,34 +35,16 @@ func main() {
     fmt.Println("keyfile: " + keyfile)
     fmt.Println("proxy_host: " + proxy_host)
 
-    // var creds *credentials.Value
-    // var creds *credentials.Credentials
-
-    // fmt.Println(creds)
-
-    // region := "ap-northeast-1"
-    // conf := &aws.Config{
-    //     Credentials: creds,
-    //     Region:      &region,
-    // }
-    // sess := session.Must(session.NewSession())
-    // eb := elasticbeanstalk.New(sess)
-    // ec2 := ec2.New(sess)
-    // s3 := s3.New(sess)
-
-    // fmt.Println(conf)
-    // fmt.Println(sess)
-    // fmt.Println(eb)
-    // fmt.Println(ec2)
-    // fmt.Println(s3)
-
     sess := session.Must(session.NewSessionWithOptions(session.Options{Profile:profile}))
-    eb := elasticbeanstalk.New(
+    eb_client := elasticbeanstalk.New(
       sess,
       aws.NewConfig().WithRegion(region),
     )
-    fmt.Println(eb.DescribeEnvironments(nil))
-    // fmt.Println(eb.DescribeEnvironmentResources(nil))
+    // fmt.Println(eb_client.DescribeEnvironments(nil))
+    eb_env_params := elasticbeanstalk.DescribeEnvironmentResourcesInput{
+      EnvironmentName: &env_name,
+    }
+    fmt.Println(eb_client.DescribeEnvironmentResources(&eb_env_params))
 
     // beanstalkのリソース情報からインスタンスIDを取得
     // environment_resources=$(aws elasticbeanstalk describe-environment-resources --environment-name $env_name --region $region --profile $profile)
@@ -85,37 +61,24 @@ func main() {
     cli.StringFlag {
       Name: "env-name, e",
       Usage: "",
-      // Destination: &env_name,
     },
     cli.StringFlag {
       Name: "region, r",
       Usage: "",
-      // Destination: &region,
     },
     cli.StringFlag {
       Name: "profile, p",
       Usage: "",
-      // Destination: &profile,
     },
     cli.StringFlag {
       Name: "keyfile, k",
       Usage: "",
-      // Destination: &keyfile,
     },
     cli.StringFlag {
       Name: "proxy-host, P",
       Usage: "",
-      // Destination: &proxy_host,
     },
   }
 
   app.Run(os.Args)
 }
-
-// // beanstalkのリソース情報からインスタンスIDを取得
-// func get_instance_id() {}
-// // インスタンスのIPアドレスを取得
-// func get_instance_ip() {}
-// // どのIPに接続するか選択
-// func select_ip() {}
-// func ssh() {}
