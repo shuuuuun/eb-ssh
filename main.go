@@ -111,7 +111,9 @@ func main() {
     if err := scanner.Err(); err != nil {
       panic(err)
     }
-    fmt.Println(selected_idx)
+
+    ip := instance_ips[selected_idx]
+    fmt.Println(*ip)
 
     // 接続
 
