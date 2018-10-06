@@ -8,6 +8,7 @@ import (
     "fmt"
     "strconv"
     "strings"
+    "bufio"
     "github.com/urfave/cli"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
@@ -88,7 +89,29 @@ func main() {
       idx_list = append(idx_list, strconv.Itoa(idx))
       fmt.Println(strconv.Itoa(idx) + ": " + *ip)
     }
-    fmt.Print("which instance? (" + strings.Join(idx_list, "/") + ")")
+    fmt.Print("which instance? (" + strings.Join(idx_list, "/") + ") ")
+
+    var selected_idx int
+    scanner := bufio.NewScanner(os.Stdin)
+    for scanner.Scan() {
+      input := scanner.Text()
+      // fmt.Println(input)
+      if input == "" {
+        selected_idx = 0
+        break
+      }
+      input_idx, err := strconv.Atoi(input)
+      if err != nil {
+        fmt.Println("Invalid Input!")
+        // panic(err)
+      }
+      // TODO: 有効なidxかチェック
+      fmt.Println(input_idx)
+    }
+    if err := scanner.Err(); err != nil {
+      panic(err)
+    }
+    fmt.Println(selected_idx)
 
     // 接続
 
