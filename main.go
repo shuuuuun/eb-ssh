@@ -14,12 +14,13 @@ package main
 
 import (
     "os"
+    "os/exec"
     "fmt"
     "strconv"
     "strings"
     "bufio"
-    "io/ioutil"
-    "golang.org/x/crypto/ssh"
+    // "io/ioutil"
+    // "golang.org/x/crypto/ssh"
     "github.com/urfave/cli"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
@@ -128,35 +129,45 @@ func main() {
 
     // 接続
     // ssh -o ProxyCommand="ssh -W %h:%p $ext_gate_host" -i "$keyfile" ec2-user@$ip
-    key, err := ioutil.ReadFile(keyfile)
-    if err != nil {
-      panic(err)
-    }
-    signer, err := ssh.ParsePrivateKey(key)
-    if err != nil {
-      panic(err)
-    }
-    auth := []ssh.AuthMethod{ssh.PublicKeys(signer)}
-    sshConfig := &ssh.ClientConfig{
-      User: "ec2-user",
-      Auth: auth,
-      HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-    sshClient, err := ssh.Dial("tcp", *ip + ":22", sshConfig)
-    if err != nil {
-      panic(err)
-    }
-    sshSession, err := sshClient.NewSession()
-    if err != nil {
-      panic(err)
-    }
-    defer sshSession.Close()
+    // out, err := exec.Command("ssh", "-o  ProxyCommand='ssh -W %h:%p " + proxy_host + "'", "-i " + keyfile, "ec2-user@" + *ip).Output()
+    // out, err := exec.Command("ssh", "-i " + keyfile, "ec2-user@" + *ip).Output()
+    // if err != nil {
+    //   panic(err)
+    // }
+    // fmt.Println(string(out))
+    cmd := exec.Command("ssh", "-i " + keyfile, "ec2-user@" + *ip)
+    cmd.Start()
+    cmd.Wait()
 
-    out, err := sshSession.CombinedOutput("pwd")
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println(string(out))
+    // key, err := ioutil.ReadFile(keyfile)
+    // if err != nil {
+    //   panic(err)
+    // }
+    // signer, err := ssh.ParsePrivateKey(key)
+    // if err != nil {
+    //   panic(err)
+    // }
+    // auth := []ssh.AuthMethod{ssh.PublicKeys(signer)}
+    // sshConfig := &ssh.ClientConfig{
+    //   User: "ec2-user",
+    //   Auth: auth,
+    //   HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    // }
+    // sshClient, err := ssh.Dial("tcp", *ip + ":22", sshConfig)
+    // if err != nil {
+    //   panic(err)
+    // }
+    // sshSession, err := sshClient.NewSession()
+    // if err != nil {
+    //   panic(err)
+    // }
+    // defer sshSession.Close()
+    // 
+    // out, err := sshSession.CombinedOutput("pwd")
+    // if err != nil {
+    //   panic(err)
+    // }
+    // fmt.Println(string(out))
 
     return nil
   }
