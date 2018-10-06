@@ -6,13 +6,13 @@ package main
 import (
     "os"
     "fmt"
+    "strconv"
+    "strings"
     "github.com/urfave/cli"
     "github.com/aws/aws-sdk-go/aws"
-    // "github.com/aws/aws-sdk-go/aws/credentials"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
     "github.com/aws/aws-sdk-go/service/ec2"
-    // "github.com/aws/aws-sdk-go/service/s3"
 )
 
 func main() {
@@ -32,11 +32,13 @@ func main() {
     proxy_host := context.String("proxy-host")
 
     // fmt.Println(context.Args().Get(0))
+    fmt.Println("----- arguments -----")
     fmt.Println("profile: " + profile)
     fmt.Println("region: " + region)
     fmt.Println("env_name: " + env_name)
     fmt.Println("keyfile: " + keyfile)
     fmt.Println("proxy_host: " + proxy_host)
+    fmt.Println("")
 
     sess := session.Must(session.NewSessionWithOptions(session.Options{Profile:profile}))
     eb_client := elasticbeanstalk.New(
@@ -75,13 +77,19 @@ func main() {
     var instance_ips []*string
     for _, v1 := range instances.Reservations {
       for _, v2 := range v1.Instances {
-        // fmt.Println(*v2.PublicIpAddress)
         instance_ips = append(instance_ips, v2.PublicIpAddress)
       }
     }
-    fmt.Println(instance_ips)
+    // fmt.Println(instance_ips)
 
     // どのIPに接続するか選択
+    var idx_list []string
+    for idx, ip := range instance_ips {
+      idx_list = append(idx_list, strconv.Itoa(idx))
+      fmt.Println(strconv.Itoa(idx) + ": " + *ip)
+    }
+    fmt.Print("which instance? (" + strings.Join(idx_list, "/") + ")")
+
     // 接続
 
     return nil
