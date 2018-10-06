@@ -41,14 +41,21 @@ func main() {
       aws.NewConfig().WithRegion(region),
     )
     // fmt.Println(eb_client.DescribeEnvironments(nil))
+
+    // beanstalkのリソース情報からインスタンスIDを取得
     eb_env_params := elasticbeanstalk.DescribeEnvironmentResourcesInput{
       EnvironmentName: &env_name,
     }
-    fmt.Println(eb_client.DescribeEnvironmentResources(&eb_env_params))
-
-    // beanstalkのリソース情報からインスタンスIDを取得
-    // environment_resources=$(aws elasticbeanstalk describe-environment-resources --environment-name $env_name --region $region --profile $profile)
-    // instance_ids=($(echo $environment_resources | jq -r '.EnvironmentResources.Instances[].Id' | tr "\n" " "))
+    resources, err := eb_client.DescribeEnvironmentResources(&eb_env_params)
+    if err != nil {
+      panic(err)
+    }
+    // fmt.Println(resources.EnvironmentResources.Instances)
+    var instance_ids []string
+    for _, v := range resources.EnvironmentResources.Instances {
+      instance_ids = append(instance_ids, *v.Id)
+    }
+    fmt.Println(instance_ids)
 
     // インスタンスのIPアドレスを取得
     // どのIPに接続するか選択
