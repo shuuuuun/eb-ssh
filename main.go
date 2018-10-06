@@ -1,5 +1,14 @@
 // https://docs.aws.amazon.com/sdk-for-go/api/service/elasticbeanstalk/
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/
+// https://godoc.org/golang.org/x/crypto/ssh
+
+// TODO: .elasticbeanstalkを読み込む
+// TODO: proxy_hostはオプションにする
+// TODO: 関数化
+// TODO: Flagsを上に
+// TODO: エラー処理
+// TODO: キャメルケースにする
+// TODO: deps
 
 package main
 
@@ -9,6 +18,8 @@ import (
     "strconv"
     "strings"
     "bufio"
+    "io/ioutil"
+    "golang.org/x/crypto/ssh"
     "github.com/urfave/cli"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
@@ -116,6 +127,36 @@ func main() {
     fmt.Println(*ip)
 
     // 接続
+    // ssh -o ProxyCommand="ssh -W %h:%p $ext_gate_host" -i "$keyfile" ec2-user@$ip
+    key, err := ioutil.ReadFile(keyfile)
+    if err != nil {
+      panic(err)
+    }
+    signer, err := ssh.ParsePrivateKey(key)
+    if err != nil {
+      panic(err)
+    }
+    auth := []ssh.AuthMethod{ssh.PublicKeys(signer)}
+    sshConfig := &ssh.ClientConfig{
+      User: "ec2-user",
+      Auth: auth,
+      HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    sshClient, err := ssh.Dial("tcp", *ip + ":22", sshConfig)
+    if err != nil {
+      panic(err)
+    }
+    sshSession, err := sshClient.NewSession()
+    if err != nil {
+      panic(err)
+    }
+    defer sshSession.Close()
+
+    out, err := sshSession.CombinedOutput("pwd")
+    if err != nil {
+      panic(err)
+    }
+    fmt.Println(string(out))
 
     return nil
   }
